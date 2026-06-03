@@ -1,0 +1,79 @@
+.page-enter-active,
+.page-leave-active {
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.layout-enter-active,
+.layout-leave-active {
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.layout-enter-from,
+.layout-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.pop-enter-active {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+.pop-leave-active {
+  transition:
+    opacity var(--dur-fast) var(--ease-in),
+    transform var(--dur-fast) var(--ease-in);
+}
+.pop-enter-from,
+.pop-leave-to {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.modal-enter-active {
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.modal-leave-active {
+  transition: opacity var(--dur-fast) var(--ease-in);
+}
+.modal-enter-active .modal__panel {
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.modal-leave-active .modal__panel {
+  transition: transform var(--dur-fast) var(--ease-in);
+}
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+.modal-enter-from .modal__panel,
+.modal-leave-to .modal__panel {
+  transform: scale(0.96);
+}
+
+.rise-enter-active {
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+.rise-enter-from {
+  opacity: 0;
+  transform: translateY(12px);
+}

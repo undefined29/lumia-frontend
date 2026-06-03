@@ -1,0 +1,162 @@
+:root,
+:root[data-theme='dark'] {
+  --color-bg: #08090c;
+  --color-bg2: #0d0e12;
+  --color-surface: #121317;
+  --color-surface2: #1a1c22;
+  --color-surface3: #23262e;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-hi: rgba(255, 255, 255, 0.12);
+  --color-text: #f0f2f5;
+  --color-text2: #c8ccd2;
+  --color-muted: #7e828c;
+  --color-mute2: #4d525a;
+  --color-accent: #c8ff3e;
+  --color-accent-contrast: #0a0b0e;
+  --color-accent-text: #c8ff3e;
+  --color-accent-dim: rgba(200, 255, 62, 0.18);
+  --color-accent2: #a3e635;
+  --color-ok: #86efac;
+  --color-warn: #fbbf24;
+  --color-err: #ff5d8a;
+  --cat-rating: #ff5d8a;
+  --cat-character: #4ecbff;
+  --cat-copyright: #c084fc;
+  --cat-artist: #ffa657;
+  --cat-general: #9affad;
+  --cat-meta: #9aa0aa;
+  --cat-year: #fbbf24;
+
+  --scrim: rgba(0, 0, 0, 0.6);
+  --glass-bg: rgba(8, 9, 12, 0.7);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 8px 28px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 40px 100px rgba(0, 0, 0, 0.6);
+  --glow-accent: 0 0 28px var(--color-accent-dim);
+
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --color-bg: #f0eee9;
+  --color-bg2: #e7e4dd;
+  --color-surface: #ffffff;
+  --color-surface2: #f3f1ea;
+  --color-surface3: #e4e0d6;
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-border-hi: rgba(0, 0, 0, 0.18);
+  --color-text: #16181d;
+  --color-text2: #3d424b;
+  --color-muted: #686d77;
+  --color-mute2: #9a9fa9;
+  --color-accent: #c8ff3e;
+  --color-accent-contrast: #0a0b0e;
+  --color-accent-text: #3f6212;
+  --color-accent-dim: rgba(101, 163, 13, 0.18);
+  --color-accent2: #4d7c0f;
+  --color-ok: #15803d;
+  --color-warn: #b45309;
+  --color-err: #be123c;
+  --cat-rating: #c81e57;
+  --cat-character: #0b6bcb;
+  --cat-copyright: #8821b0;
+  --cat-artist: #c2410c;
+  --cat-general: #1f7a35;
+  --cat-meta: #545b66;
+  --cat-year: #a16207;
+  --scrim: rgba(20, 18, 14, 0.45);
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --shadow-sm: 0 2px 8px rgba(20, 18, 14, 0.1);
+  --shadow-card: 0 8px 28px rgba(20, 18, 14, 0.14);
+  --shadow-modal: 0 40px 100px rgba(20, 18, 14, 0.22);
+  --glow-accent: 0 0 24px rgba(101, 163, 13, 0.22);
+  color-scheme: light;
+}
+
+:root[data-theme='oled'] {
+  --color-bg: #000000;
+  --color-bg2: #050507;
+  --color-surface: #0a0b0e;
+  --color-surface2: #121317;
+  --color-surface3: #1c1e24;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-hi: rgba(255, 255, 255, 0.16);
+  --color-text: #f4f6f9;
+  --color-text2: #cdd1d7;
+  --color-muted: #868a93;
+  --color-mute2: #565b63;
+  --color-accent: #c8ff3e;
+  --color-accent-contrast: #000000;
+  --color-accent-text: #c8ff3e;
+  --color-accent-dim: rgba(200, 255, 62, 0.2);
+  --color-accent2: #a3e635;
+  --color-ok: #86efac;
+  --color-warn: #fbbf24;
+  --color-err: #ff5d8a;
+  --cat-rating: #ff5d8a;
+  --cat-character: #4ecbff;
+  --cat-copyright: #c084fc;
+  --cat-artist: #ffa657;
+  --cat-general: #9affad;
+  --cat-meta: #9aa0aa;
+  --cat-year: #fbbf24;
+  --scrim: rgba(0, 0, 0, 0.72);
+  --glass-bg: rgba(0, 0, 0, 0.82);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 8px 28px rgba(0, 0, 0, 0.6);
+  --shadow-modal: 0 40px 100px rgba(0, 0, 0, 0.8);
+  --glow-accent: 0 0 28px var(--color-accent-dim);
+  color-scheme: dark;
+}
+
+:root {
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', monospace;
+
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 14px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-9: 36px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-16: 64px;
+
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+
+  --z-sticky: 30;
+  --z-nav: 40;
+  --z-dropdown: 60;
+  --z-overlay: 100;
+  --z-modal: 200;
+  --z-popover: 300;
+  --z-toast: 400;
+
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 280ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+
+  --topnav-h: 56px;
+  --sidebar-w: 280px;
+  --rail-w: 340px;
+  --touch-min: 44px;
+
+  --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
+}

@@ -5,7 +5,9 @@ import { ApiError, ErrorCode } from '~/types/api'
 import { tagViewsFromEventTags } from '~/utils/adapters'
 import { sha256Hex } from '~/utils/hash'
 
-export type UploadPhase = 'queued' | 'uploading' | 'analyzing' | 'done' | 'error'
+export type UploadPhase = 'queued' | 'uploading' | 'analyzing' | 'done' | 'error' | 'duplicate'
+
+const PENDING_PHASES: ReadonlySet<UploadPhase> = new Set(['queued', 'uploading', 'analyzing'])
 
 export interface UploadOptions {
   episodeId?: string
@@ -32,6 +34,10 @@ const UPLOAD_ERROR_KEY: Record<number, string> = {
   [ErrorCode.NotMultipart]: 'errors.notMultipart',
   [ErrorCode.NoFilesUploaded]: 'errors.noFilesUploaded',
   [ErrorCode.NotEnoughPermissions]: 'errors.notEnoughPermissions',
+}
+
+function hueFromSeed(seed: string): number {
+  return Math.abs(seed.split('').reduce((h, c) => h + c.charCodeAt(0), 0)) % 360
 }
 
 function phaseOf(status: ImageStatus): UploadPhase {
@@ -64,6 +70,7 @@ export function useUpload() {
   const suppressGlobalDrop = useState<boolean>('upload-suppress-global', () => false)
 
   const doneCount = computed(() => items.value.filter((i) => i.phase === 'done').length)
+  const pendingCount = computed(() => items.value.filter((i) => PENDING_PHASES.has(i.phase)).length)
   const total = computed(() => items.value.length)
 
   function patch(id: string, patchData: Partial<UploadItemView>): void {
@@ -93,7 +100,6 @@ export function useUpload() {
         episodeId: options.episodeId,
         sourceType: options.sourceType,
       })
-      if (!uploaded.length) return 0
 
       const hashes = await Promise.all(batch.map((f) => f.arrayBuffer().then(sha256Hex)))
       const itemByHash = new Map(
@@ -101,14 +107,23 @@ export function useUpload() {
       )
 
       const newViews: UploadItemView[] = []
+      let added = 0
       batch.forEach((file, idx) => {
-        const item = itemByHash.get(hashes[idx]!)
-        if (!item) return
+        const hash = hashes[idx]!
+        const item = itemByHash.get(hash)
+        // The backend omits an id for images it already has: surface them as duplicates
+        // instead of dropping them silently, so the user knows nothing was lost.
+        if (!item) {
+          if (items.value.some((i) => i.id === `dup:${hash}`)) return
+          newViews.push(buildDuplicateView(file, hash))
+          return
+        }
+        added++
         newViews.push({
           id: item.id,
           filename: file.name,
           size: file.size,
-          hue: Math.abs(item.id.split('').reduce((h, c) => h + c.charCodeAt(0), 0)) % 360,
+          hue: hueFromSeed(item.id),
           phase: phaseOf(item.status),
           progress: 0,
           tags: null,
@@ -118,12 +133,28 @@ export function useUpload() {
       })
 
       items.value = [...items.value, ...newViews]
-      for (const view of newViews) subscribe(view.id)
-      return newViews.length
+      for (const view of newViews) {
+        if (view.phase !== 'duplicate') subscribe(view.id)
+      }
+      return added
     } catch (e) {
       const code = e instanceof ApiError ? e.code : undefined
       error.value = t((code != null && UPLOAD_ERROR_KEY[code]) || 'errors.uploadFailed')
       return 0
+    }
+  }
+
+  function buildDuplicateView(file: File, hash: string): UploadItemView {
+    return {
+      id: `dup:${hash}`,
+      filename: file.name,
+      size: file.size,
+      hue: hueFromSeed(hash),
+      phase: 'duplicate',
+      progress: 1,
+      tags: null,
+      error: null,
+      previewUrl: URL.createObjectURL(file),
     }
   }
 
@@ -184,9 +215,12 @@ export function useUpload() {
   }
 
   async function deleteUploaded(id: string): Promise<void> {
-    try {
-      await api.deleteImage(id)
-    } catch {}
+    const item = items.value.find((i) => i.id === id)
+    if (item?.phase !== 'duplicate') {
+      try {
+        await api.deleteImage(id)
+      } catch {}
+    }
     remove(id)
   }
 
@@ -226,6 +260,7 @@ export function useUpload() {
     notice,
     completedTick,
     doneCount,
+    pendingCount,
     total,
     batchSize: BATCH_SIZE,
     suppressGlobalDrop,

@@ -230,6 +230,32 @@ async function deleteActiveSeason(): Promise<void> {
   }
 }
 
+const editEpisodeTarget = ref<EpisodeView | null>(null)
+const savingEpisode = ref(false)
+const editEpisodeError = ref<string | null>(null)
+
+function openEditEpisode(episode: EpisodeView): void {
+  editEpisodeError.value = null
+  editEpisodeTarget.value = episode
+}
+
+async function submitEditEpisode(payload: { title: string | null }): Promise<void> {
+  const target = editEpisodeTarget.value
+  if (!target) return
+  savingEpisode.value = true
+  editEpisodeError.value = null
+  try {
+    await api.updateEpisode(target.id, { title: payload.title })
+    editEpisodeTarget.value = null
+    await episodesResource.retry()
+  } catch (error: unknown) {
+    editEpisodeError.value =
+      error instanceof ApiError ? error.message : t('library.updateEpisodeFailed')
+  } finally {
+    savingEpisode.value = false
+  }
+}
+
 function episodeQueryLabel(episode: EpisodeView): string {
   return `E${String(episode.number).padStart(2, '0')} · ${episode.title}`
 }
@@ -386,7 +412,9 @@ useSeoMeta({
                 :key="episode.id"
                 v-reveal
                 :episode="episode"
+                :editable="canManageAnime"
                 @select="openEpisode"
+                @edit="openEditEpisode"
               />
             </div>
           </LAsyncState>
@@ -419,6 +447,14 @@ useSeoMeta({
       @submit="submitEditSeason"
       @delete="deleteActiveSeason"
       @close="editSeasonOpen = false"
+    />
+    <EpisodeEditModal
+      :open="!!editEpisodeTarget"
+      :episode="editEpisodeTarget"
+      :saving="savingEpisode"
+      :error="editEpisodeError"
+      @submit="submitEditEpisode"
+      @close="editEpisodeTarget = null"
     />
   </main>
 </template>

@@ -66,6 +66,8 @@
     "badgeAnalyzing": "AI tagging…",
     "badgeDone": "tagged",
     "badgeError": "failed",
+    "badgeDuplicate": "already on platform",
+    "phaseDuplicate": "ALREADY ON PLATFORM",
     "bulkTitle": "Bulk upload to episode",
     "bulkDesc": "Pick the episode these screenshots belong to. Every file you add is attached to it as a screenshot.",
     "bulkPickEpisode": "TARGET EPISODE",
@@ -167,7 +169,11 @@
     "deleteSeasonConfirm": "Permanently delete this season?",
     "seasonHasEpisodes": "Can't delete a season that still has episodes. Remove its episodes first.",
     "updateSeasonFailed": "Could not update the season.",
-    "deleteSeasonFailed": "Could not delete the season."
+    "deleteSeasonFailed": "Could not delete the season.",
+    "editEpisode": "Edit episode",
+    "episodeTitleLabel": "Episode title",
+    "episodeTitlePlaceholder": "e.g. The Beginning",
+    "updateEpisodeFailed": "Could not update the episode."
   },
   "gallery": {
     "title": "Gallery",

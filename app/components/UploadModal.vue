@@ -9,14 +9,26 @@ const ImageTagsEditModal = defineAsyncComponent(
   () => import('~/components/image/ImageTagsEditModal.vue'),
 )
 
-const { open, items, error, notice, doneCount, total, deleteUploaded, clear, closeModal } =
-  useUpload()
+const {
+  open,
+  items,
+  error,
+  notice,
+  doneCount,
+  pendingCount,
+  total,
+  deleteUploaded,
+  clear,
+  closeModal,
+} = useUpload()
 const { t } = useI18n()
 const { api } = useApi()
 const { toImageView } = useAdapters()
 
-const remaining = computed(() => total.value - doneCount.value)
-const progressPct = computed(() => (total.value ? (doneCount.value / total.value) * 100 : 0))
+const remaining = computed(() => pendingCount.value)
+const progressPct = computed(() =>
+  total.value ? ((total.value - pendingCount.value) / total.value) * 100 : 0,
+)
 
 const RING_CIRCUMFERENCE = 69.1
 
@@ -31,6 +43,7 @@ const BADGE: Record<UploadPhase, BadgeMeta> = {
   analyzing: { key: 'upload.badgeAnalyzing', color: 'var(--cat-character)' },
   done: { key: 'upload.badgeDone', color: 'var(--color-ok)' },
   error: { key: 'upload.badgeError', color: 'var(--color-err)' },
+  duplicate: { key: 'upload.badgeDuplicate', color: 'var(--color-warn)' },
 }
 
 const STATUS_LABEL: Record<UploadPhase, string> = {
@@ -39,6 +52,7 @@ const STATUS_LABEL: Record<UploadPhase, string> = {
   analyzing: 'upload.phaseAnalyzing',
   done: 'upload.phaseDone',
   error: 'upload.phaseError',
+  duplicate: 'upload.phaseDuplicate',
 }
 
 function ringDash(progress: number): string {
@@ -173,6 +187,9 @@ async function confirmDelete(): Promise<void> {
           </div>
           <div v-else-if="item.phase === 'error'" class="um__overlay um__overlay--error">
             <LIcon name="x" :size="20" :stroke="2" />
+          </div>
+          <div v-else-if="item.phase === 'duplicate'" class="um__overlay um__overlay--duplicate">
+            <LIcon name="picture" :size="18" :stroke="2" />
           </div>
         </div>
 
@@ -404,6 +421,10 @@ async function confirmDelete(): Promise<void> {
 .um__overlay--error {
   background: rgba(0, 0, 0, 0.65);
   color: var(--color-err);
+}
+.um__overlay--duplicate {
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--color-warn);
 }
 .um__ring {
   transform: rotate(-90deg);

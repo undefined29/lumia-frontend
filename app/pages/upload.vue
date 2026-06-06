@@ -9,7 +9,17 @@ const { t } = useI18n()
 const { api } = useApi()
 const { toSeasonView, toEpisodeView } = useAdapters()
 const { canUpload } = usePermissions()
-const { items, error, notice, start, deleteUploaded, clear, suppressGlobalDrop } = useUpload()
+const {
+  items,
+  error,
+  notice,
+  pendingCount,
+  start,
+  remove,
+  deleteUploaded,
+  clear,
+  suppressGlobalDrop,
+} = useUpload()
 
 const deleteTargetId = ref<string | null>(null)
 const deleting = ref(false)
@@ -146,13 +156,35 @@ function onDragLeave(): void {
 
 const doneCount = computed(() => items.value.filter((i) => i.phase === 'done').length)
 
+function onRemoveItem(item: { id: string; phase: UploadPhase }): void {
+  // Duplicates were never uploaded, so just drop the row locally — no delete confirm.
+  if (item.phase === 'duplicate') remove(item.id)
+  else askDelete(item.id)
+}
+
 const BADGE: Record<UploadPhase, { key: string; color: string }> = {
   queued: { key: 'upload.badgeQueued', color: 'var(--color-muted)' },
   uploading: { key: 'upload.badgeUploading', color: 'var(--color-accent-text)' },
   analyzing: { key: 'upload.badgeAnalyzing', color: 'var(--cat-character)' },
   done: { key: 'upload.badgeDone', color: 'var(--color-ok)' },
   error: { key: 'upload.badgeError', color: 'var(--color-err)' },
+  duplicate: { key: 'upload.badgeDuplicate', color: 'var(--color-warn)' },
 }
+
+const SCROLL_TOP_THRESHOLD = 500
+const showToTop = ref(false)
+const reducedMotion = useReducedMotion()
+
+function onWindowScroll(): void {
+  showToTop.value = window.scrollY > SCROLL_TOP_THRESHOLD
+}
+
+function scrollToTop(): void {
+  window.scrollTo({ top: 0, behavior: reducedMotion.value ? 'auto' : 'smooth' })
+}
+
+onMounted(() => window.addEventListener('scroll', onWindowScroll, { passive: true }))
+onBeforeUnmount(() => window.removeEventListener('scroll', onWindowScroll))
 </script>
 
 <template>
@@ -321,7 +353,7 @@ const BADGE: Record<UploadPhase, { key: string; color: string }> = {
             {{
               t('upload.summary', {
                 done: doneCount,
-                remaining: items.length - doneCount,
+                remaining: pendingCount,
                 max: items.length,
               })
             }}
@@ -342,6 +374,12 @@ const BADGE: Record<UploadPhase, { key: string; color: string }> = {
               </div>
               <div v-else-if="item.phase === 'error'" class="row__overlay row__overlay--error">
                 <LIcon name="x" :size="18" :stroke="2" />
+              </div>
+              <div
+                v-else-if="item.phase === 'duplicate'"
+                class="row__overlay row__overlay--duplicate"
+              >
+                <LIcon name="picture" :size="16" :stroke="2" />
               </div>
             </div>
             <div class="row__body">
@@ -368,7 +406,7 @@ const BADGE: Record<UploadPhase, { key: string; color: string }> = {
               type="button"
               class="row__remove"
               :aria-label="t('common.delete')"
-              @click="askDelete(item.id)"
+              @click="onRemoveItem(item)"
             >
               <LIcon name="x" :size="15" :stroke="2" />
             </button>
@@ -376,6 +414,19 @@ const BADGE: Record<UploadPhase, { key: string; color: string }> = {
         </ul>
       </section>
     </template>
+
+    <Transition name="fade">
+      <button
+        v-if="showToTop"
+        type="button"
+        class="bulk__totop"
+        :aria-label="t('gallery.scrollTop')"
+        :title="t('gallery.scrollTop')"
+        @click="scrollToTop"
+      >
+        <LIcon name="chev" :size="20" :stroke="2" class="bulk__totop-icn" />
+      </button>
+    </Transition>
 
     <LConfirm
       :open="!!deleteTargetId"
@@ -642,6 +693,9 @@ const BADGE: Record<UploadPhase, { key: string; color: string }> = {
 .row__overlay--error {
   color: var(--color-err);
 }
+.row__overlay--duplicate {
+  color: var(--color-warn);
+}
 .row__body {
   min-width: 0;
 }
@@ -689,6 +743,34 @@ const BADGE: Record<UploadPhase, { key: string; color: string }> = {
 .row__remove:hover {
   background: var(--color-surface2);
   color: var(--color-err);
+}
+
+.bulk__totop {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: var(--z-sticky);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-pill);
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border-hi);
+  color: var(--color-text);
+  box-shadow: var(--shadow-card);
+  transition:
+    background var(--dur-fast),
+    transform var(--dur-fast) var(--ease-out);
+}
+.bulk__totop:hover {
+  background: var(--color-surface3);
+  transform: translateY(-2px);
+}
+.bulk__totop-icn {
+  transform: rotate(180deg);
 }
 
 @media (max-width: 768px) {

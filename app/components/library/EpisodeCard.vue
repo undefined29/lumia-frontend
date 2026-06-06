@@ -4,8 +4,13 @@ import type { EpisodeView } from '~/types/view'
 import { episodeLabel } from '~/utils/format'
 import { hueGradient } from '~/utils/hue'
 
-const props = defineProps<{ episode: EpisodeView }>()
-const emit = defineEmits<{ select: [episode: EpisodeView] }>()
+const props = withDefaults(defineProps<{ episode: EpisodeView; editable?: boolean }>(), {
+  editable: false,
+})
+const emit = defineEmits<{
+  select: [episode: EpisodeView]
+  edit: [episode: EpisodeView]
+}>()
 
 const { t } = useI18n()
 
@@ -32,40 +37,59 @@ function onClick(): void {
   if (props.episode.isEmpty) return
   emit('select', props.episode)
 }
+
+function onEdit(): void {
+  emit('edit', props.episode)
+}
 </script>
 
 <template>
-  <button
-    type="button"
-    class="ep"
-    :class="{ 'ep--empty': episode.isEmpty }"
-    :disabled="episode.isEmpty"
-    @click="onClick"
-  >
-    <span
-      class="ep__num mono"
-      :class="{ 'ep__num--image': showThumb }"
-      :style="showThumb ? undefined : { background: numberBackground }"
+  <div class="ep-wrap" :class="{ 'ep-wrap--editable': editable }">
+    <button
+      type="button"
+      class="ep"
+      :class="{ 'ep--empty': episode.isEmpty }"
+      :disabled="episode.isEmpty"
+      @click="onClick"
     >
-      <img
-        v-if="showThumb"
-        :src="episode.thumbUrl!"
-        alt=""
-        class="ep__thumb"
-        loading="lazy"
-        @error="thumbFailed = true"
-      />
-      <span class="ep__num-text">{{ numberLabel }}</span>
-    </span>
-    <span class="ep__body">
-      <span class="ep__title">{{ episode.title }}</span>
-      <span class="ep__meta mono">{{ metaText }}</span>
-    </span>
-    <LIcon v-if="!episode.isEmpty" name="chevR" :size="14" class="ep__chev" />
-  </button>
+      <span
+        class="ep__num mono"
+        :class="{ 'ep__num--image': showThumb }"
+        :style="showThumb ? undefined : { background: numberBackground }"
+      >
+        <img
+          v-if="showThumb"
+          :src="episode.thumbUrl!"
+          alt=""
+          class="ep__thumb"
+          loading="lazy"
+          @error="thumbFailed = true"
+        />
+        <span class="ep__num-text">{{ numberLabel }}</span>
+      </span>
+      <span class="ep__body">
+        <span class="ep__title">{{ episode.title }}</span>
+        <span class="ep__meta mono">{{ metaText }}</span>
+      </span>
+      <LIcon v-if="!episode.isEmpty" name="chevR" :size="14" class="ep__chev" />
+    </button>
+    <button
+      v-if="editable"
+      type="button"
+      class="ep__edit"
+      :aria-label="t('common.edit')"
+      :title="t('library.editEpisode')"
+      @click="onEdit"
+    >
+      <LIcon name="edit" :size="13" />
+    </button>
+  </div>
 </template>
 
 <style scoped>
+.ep-wrap {
+  position: relative;
+}
 .ep {
   display: flex;
   align-items: center;
@@ -154,5 +178,40 @@ function onClick(): void {
 .ep__chev {
   color: var(--color-muted);
   flex-shrink: 0;
+}
+.ep-wrap--editable .ep {
+  padding-right: 40px;
+}
+.ep__edit {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-s);
+  color: var(--color-muted);
+  background: var(--color-surface2);
+  border: 1px solid var(--color-border);
+  opacity: 0;
+  transition:
+    opacity var(--dur-fast),
+    background var(--dur-fast),
+    color var(--dur-fast);
+}
+.ep-wrap:hover .ep__edit,
+.ep__edit:focus-visible {
+  opacity: 1;
+}
+.ep__edit:hover {
+  background: var(--color-surface3);
+  color: var(--color-text);
+}
+@media (hover: none) {
+  .ep__edit {
+    opacity: 1;
+  }
 }
 </style>

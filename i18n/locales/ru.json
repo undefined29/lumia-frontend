@@ -66,6 +66,8 @@
     "badgeAnalyzing": "ИИ-теги…",
     "badgeDone": "с тегами",
     "badgeError": "ошибка",
+    "badgeDuplicate": "уже на платформе",
+    "phaseDuplicate": "УЖЕ НА ПЛАТФОРМЕ",
     "bulkTitle": "Загрузка в эпизод",
     "bulkDesc": "Выберите эпизод, к которому относятся эти скриншоты. Каждый добавленный файл будет привязан к нему как скриншот.",
     "bulkPickEpisode": "ЦЕЛЕВОЙ ЭПИЗОД",
@@ -167,7 +169,11 @@
     "deleteSeasonConfirm": "Удалить этот сезон безвозвратно?",
     "seasonHasEpisodes": "Нельзя удалить сезон, в котором есть эпизоды. Сначала удалите их.",
     "updateSeasonFailed": "Не удалось обновить сезон.",
-    "deleteSeasonFailed": "Не удалось удалить сезон."
+    "deleteSeasonFailed": "Не удалось удалить сезон.",
+    "editEpisode": "Изменить эпизод",
+    "episodeTitleLabel": "Название эпизода",
+    "episodeTitlePlaceholder": "напр. Начало",
+    "updateEpisodeFailed": "Не удалось обновить эпизод."
   },
   "gallery": {
     "title": "Галерея",

@@ -1,7 +1,20 @@
-# Lumia — Frontend
+<p align="center">
+  <img src="https://github.com/Amirust/lumia-frontend/blob/main/readme_files/readme_cover.webp?raw=true" alt="Lumia" />
+</p>
 
-> **Note:** this frontend was not written by me — it was fully AI-generated.
-> I hate frontend development and wanted to focus only on backend, so AVE BACKEND.
+# Lumia
+
+This is a hobby project.
+
+**Note:** this frontend was not written by me — it was fully AI-generated.
+
+I hate frontend development and wanted to focus only on backend, so AVE BACKEND.
+
+Backend lives here: https://github.com/Amirust/lumia-backend
+
+This repository is the frontend.
+
+---
 
 Lumia is an anime image gallery with a focus on fast browsing, rich tagging, and
 AI-assisted organization. This repository contains the web client; it talks to the

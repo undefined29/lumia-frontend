@@ -66,6 +66,8 @@
     "badgeAnalyzing": "KI-Tagging…",
     "badgeDone": "getaggt",
     "badgeError": "fehlgeschlagen",
+    "badgeDuplicate": "bereits vorhanden",
+    "phaseDuplicate": "BEREITS AUF DER PLATTFORM",
     "bulkTitle": "Massen-Upload in Episode",
     "bulkDesc": "Wähle die Episode, zu der diese Screenshots gehören. Jede hinzugefügte Datei wird ihr als Screenshot zugeordnet.",
     "bulkPickEpisode": "ZIEL-EPISODE",
@@ -167,7 +169,11 @@
     "deleteSeasonConfirm": "Diese Staffel endgültig löschen?",
     "seasonHasEpisodes": "Eine Staffel mit Episoden kann nicht gelöscht werden. Entferne zuerst ihre Episoden.",
     "updateSeasonFailed": "Staffel konnte nicht aktualisiert werden.",
-    "deleteSeasonFailed": "Staffel konnte nicht gelöscht werden."
+    "deleteSeasonFailed": "Staffel konnte nicht gelöscht werden.",
+    "editEpisode": "Episode bearbeiten",
+    "episodeTitleLabel": "Episodentitel",
+    "episodeTitlePlaceholder": "z. B. Der Anfang",
+    "updateEpisodeFailed": "Episode konnte nicht aktualisiert werden."
   },
   "gallery": {
     "title": "Galerie",

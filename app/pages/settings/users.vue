@@ -62,7 +62,11 @@ const filtered = computed(() => {
   return users.value
     .filter((u) => {
       if (!q) return true
-      return u.name.toLowerCase().includes(q) || (u.username ?? '').toLowerCase().includes(q)
+      return (
+        u.name.toLowerCase().includes(q) ||
+        (u.username ?? '').toLowerCase().includes(q) ||
+        (u.discordId ?? '').toLowerCase().includes(q)
+      )
     })
     .filter((u) => {
       switch (filter.value) {

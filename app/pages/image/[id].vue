@@ -814,6 +814,9 @@ useSeoMeta({
   object-fit: contain;
   filter: blur(14px);
   transition: opacity 0.25s var(--ease-out);
+  /* Decorative low-res preview: never intercept the native "Copy image"
+     context menu, which would otherwise copy the thumbnail. */
+  pointer-events: none;
 }
 .ip__img--ph-hidden {
   opacity: 0;

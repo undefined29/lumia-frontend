@@ -106,14 +106,25 @@ function onFavClick(event: MouseEvent): void {
 }
 
 const DOUBLE_TAP_MS = 280
+const LONG_PRESS_MS = 450
 const TAP_MOVE_TOLERANCE = 10
 let tapStartX = 0
 let tapStartY = 0
 let tapMoved = false
 let lastTapTime = 0
 let singleTapTimer: ReturnType<typeof setTimeout> | null = null
+let longPressTimer: ReturnType<typeof setTimeout> | null = null
+let longPressed = false
+
+function clearLongPress(): void {
+  if (longPressTimer) {
+    clearTimeout(longPressTimer)
+    longPressTimer = null
+  }
+}
 
 function onTouchStart(event: TouchEvent): void {
+  clearLongPress()
   if (event.touches.length !== 1) {
     tapMoved = true
     return
@@ -122,6 +133,15 @@ function onTouchStart(event: TouchEvent): void {
   tapStartX = touch.clientX
   tapStartY = touch.clientY
   tapMoved = false
+  longPressed = false
+  longPressTimer = setTimeout(() => {
+    longPressTimer = null
+    longPressed = true
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate(10)
+    }
+    emit('select', props.image.id, { shift: false, meta: false })
+  }, LONG_PRESS_MS)
 }
 
 function onTouchMove(event: TouchEvent): void {
@@ -129,10 +149,18 @@ function onTouchMove(event: TouchEvent): void {
   if (!touch) return
   if (Math.hypot(touch.clientX - tapStartX, touch.clientY - tapStartY) > TAP_MOVE_TOLERANCE) {
     tapMoved = true
+    clearLongPress()
   }
 }
 
 function onTouchEnd(event: TouchEvent): void {
+  clearLongPress()
+  if (longPressed) {
+    // Long-press toggled selection — suppress the synthetic click (navigation/re-toggle).
+    event.preventDefault()
+    longPressed = false
+    return
+  }
   if (props.selectable || tapMoved || event.changedTouches.length !== 1) return
   event.preventDefault()
   const touch = event.changedTouches[0]!
@@ -152,6 +180,11 @@ function onTouchEnd(event: TouchEvent): void {
     }, DOUBLE_TAP_MS)
   }
 }
+
+function onTouchCancel(): void {
+  clearLongPress()
+  longPressed = false
+}
 </script>
 
 <template>
@@ -170,6 +203,7 @@ function onTouchEnd(event: TouchEvent): void {
     @touchstart.passive="onTouchStart"
     @touchmove.passive="onTouchMove"
     @touchend="onTouchEnd"
+    @touchcancel.passive="onTouchCancel"
   >
     <LImage
       :src="image.thumbUrl || null"

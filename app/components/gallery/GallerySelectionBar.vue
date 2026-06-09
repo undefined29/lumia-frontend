@@ -1,5 +1,11 @@
 <script setup lang="ts">
-defineProps<{ count: number; total: number }>()
+defineProps<{
+  count: number
+  total: number
+  canTags?: boolean
+  canEpisode?: boolean
+  canDelete?: boolean
+}>()
 const emit = defineEmits<{
   selectAll: []
   clear: []
@@ -26,17 +32,22 @@ const { t } = useI18n()
         <span>{{ t('selection.selectAll', { n: total }, total) }}</span>
       </button>
 
-      <button type="button" class="selbar__btn" @click="emit('assignTags')">
+      <button v-if="canTags" type="button" class="selbar__btn" @click="emit('assignTags')">
         <LIcon name="edit" :size="14" />
         <span>{{ t('selection.assignTags') }}</span>
       </button>
 
-      <button type="button" class="selbar__btn" @click="emit('assignEpisode')">
+      <button v-if="canEpisode" type="button" class="selbar__btn" @click="emit('assignEpisode')">
         <LIcon name="film" :size="14" />
         <span>{{ t('selection.assignEpisode') }}</span>
       </button>
 
-      <button type="button" class="selbar__btn selbar__btn--danger" @click="emit('delete')">
+      <button
+        v-if="canDelete"
+        type="button"
+        class="selbar__btn selbar__btn--danger"
+        @click="emit('delete')"
+      >
         <LIcon name="trash" :size="14" />
         <span>{{ t('selection.delete') }}</span>
       </button>

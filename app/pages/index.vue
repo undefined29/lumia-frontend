@@ -343,7 +343,8 @@ async function onToggleFavorite(id: string, next: boolean): Promise<void> {
   }
 }
 
-const { canManageAnime } = usePermissions()
+const { canManageAnime, canEditOthersTags, canAssignOthersEpisodes, canDeleteOthersImages } =
+  usePermissions()
 const assignModals = ref<{
   openSetAvatar: (image: ImageView) => void
   openSetCover: (image: ImageView) => void
@@ -495,6 +496,9 @@ async function confirmDelete(): Promise<void> {
       <GallerySelectionBar
         :count="selection.count.value"
         :total="images.length"
+        :can-tags="canEditOthersTags"
+        :can-episode="canAssignOthersEpisodes"
+        :can-delete="canDeleteOthersImages"
         @select-all="onSelectAll"
         @clear="selection.clear()"
         @assign-tags="batchTagsOpen = true"

@@ -175,7 +175,12 @@ async function submitImport(url: string): Promise<void> {
     const imported = await api.importSeason(seriesId.value, url)
     importOpen.value = false
     await seriesResource.retry()
-    activeSeasonId.value = imported.id
+    // Select the imported season from the freshly loaded list. If the backend
+    // hasn't surfaced it yet, fall back to the first season instead of leaving
+    // an invalid id that renders an empty page until a manual refresh.
+    const list = seriesResource.data.value?.seasons ?? []
+    const hasImported = list.some((s) => s.id === imported.id)
+    activeSeasonId.value = hasImported ? imported.id : (list[0]?.id ?? null)
   } catch (error: unknown) {
     importError.value = error instanceof ApiError ? error.message : t('library.importFailed')
   } finally {

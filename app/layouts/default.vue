@@ -13,6 +13,7 @@ const { pickFiles } = useUpload()
     <ClientOnly>
       <GlobalUploadHost />
       <HeartLayer />
+      <LToastHost />
     </ClientOnly>
   </div>
 </template>

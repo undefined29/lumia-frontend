@@ -38,7 +38,7 @@ const activeIndex = ref(-1)
 const suggestions = ref<Suggestion[]>([])
 const inputEl = ref<HTMLInputElement | null>(null)
 
-const DEBOUNCE_MS = 160
+const DEBOUNCE_MS = 300
 let debounceTimer: ReturnType<typeof setTimeout> | undefined
 let runToken = 0
 

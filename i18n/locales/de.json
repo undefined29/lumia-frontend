@@ -428,6 +428,7 @@
     "notMultipart": "Der Upload muss als multipart/form-data gesendet werden.",
     "noFilesUploaded": "Es wurden keine Dateien hochgeladen.",
     "notEnoughPermissions": "Sie haben keine Berechtigung zum Hochladen.",
-    "uploadFailed": "Upload fehlgeschlagen. Bitte erneut versuchen."
+    "uploadFailed": "Upload fehlgeschlagen. Bitte erneut versuchen.",
+    "rateLimited": "Zu viele Anfragen. Bitte kurz warten und erneut versuchen."
   }
 }

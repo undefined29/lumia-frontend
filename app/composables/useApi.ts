@@ -41,6 +41,32 @@ interface FetchOptions {
   body?: unknown
 }
 
+/** Max automatic retries on HTTP 429 before surfacing the error to the caller. */
+const MAX_RATE_LIMIT_RETRIES = 2
+/** Upper bound on a single backoff wait, so a large `Retry-After` can't freeze the UI. */
+const MAX_RETRY_DELAY_MS = 8000
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/** Parse the throttler's `Retry-After` (seconds), falling back to `X-RateLimit-Reset`. */
+function parseRetryAfterMs(headers: Headers | undefined): number | undefined {
+  if (!headers) return undefined
+  for (const header of ['retry-after', 'x-ratelimit-reset']) {
+    const raw = headers.get(header)
+    if (raw == null) continue
+    const seconds = Number(raw)
+    if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000)
+  }
+  return undefined
+}
+
+function backoffDelayMs(retryAfterMs: number | undefined, attempt: number): number {
+  const base = retryAfterMs ?? Math.min(500 * 2 ** attempt, 4000)
+  return Math.min(base, MAX_RETRY_DELAY_MS)
+}
+
 export interface SseController {
   close: () => void
 }
@@ -54,7 +80,16 @@ export interface SseOptions {
 export function useApi() {
   const config = useRuntimeConfig()
   const userStore = useUserStore()
+  const toasts = useToasts()
+  const nuxtApp = useNuxtApp()
   const baseURL = config.public.apiBaseUrl as string
+
+  // Resolve translations defensively: useApi() also runs in route middleware / plugins,
+  // where the setup-only `useI18n()` may be unavailable. Fall back to the key if missing.
+  function t(key: string): string {
+    const i18n = nuxtApp.$i18n as { t?: (k: string) => string } | undefined
+    return i18n?.t?.(key) ?? key
+  }
 
   function authHeaders(): Record<string, string> {
     return userStore.token ? { Authorization: `Bearer ${userStore.token}` } : {}
@@ -62,39 +97,66 @@ export function useApi() {
 
   async function $apiFetch<T>(path: string, opts: FetchOptions = {}): Promise<T> {
     const query = opts.query as Record<string, unknown> | undefined
-    let envelope: ApiEnvelope<T>
-    try {
-      envelope = await $fetch<ApiEnvelope<T>>(path, {
-        baseURL,
-        method: opts.method ?? 'GET',
-        query,
-        body: opts.body as Record<string, unknown> | undefined,
-        headers: authHeaders(),
-      })
-    } catch (error: unknown) {
-      const e = error as {
-        status?: number
-        statusCode?: number
-        data?: Partial<ApiEnvelope<T>>
-      }
-      const status = e.statusCode ?? e.status ?? 0
-      const envErr = e.data?.errors?.[0]
-      const message = envErr?.message ?? (error instanceof Error ? error.message : 'Network error')
-      throw new ApiError(message, {
-        status,
-        code: envErr?.code ?? ErrorCode.UNKNOWN,
-        errors: e.data?.errors ?? [],
-      })
-    }
+    const method = opts.method ?? 'GET'
 
-    if (!envelope.ok) {
-      const first = envelope.errors[0]
-      throw new ApiError(first?.message ?? 'Request failed', {
-        code: first?.code ?? ErrorCode.UNKNOWN,
-        errors: envelope.errors,
-      })
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const envelope = await $fetch<ApiEnvelope<T>>(path, {
+          baseURL,
+          method,
+          query,
+          body: opts.body as Record<string, unknown> | undefined,
+          headers: authHeaders(),
+        })
+        if (!envelope.ok) {
+          const first = envelope.errors[0]
+          throw new ApiError(first?.message ?? 'Request failed', {
+            code: first?.code ?? ErrorCode.UNKNOWN,
+            errors: envelope.errors,
+          })
+        }
+        return envelope.result
+      } catch (error: unknown) {
+        // Envelope-level failures are already shaped; never retry or reshape them.
+        if (error instanceof ApiError) throw error
+
+        const e = error as {
+          status?: number
+          statusCode?: number
+          data?: Partial<ApiEnvelope<T>>
+          response?: { headers?: Headers }
+        }
+        const status = e.statusCode ?? e.status ?? 0
+
+        if (status === 429) {
+          const retryAfterMs = parseRetryAfterMs(e.response?.headers)
+          // The request was rejected, not processed, so retrying is safe even for writes.
+          // Reads (GET) are debounced/re-fired by the UI, so we let them fail fast instead.
+          if (method !== 'GET' && attempt < MAX_RATE_LIMIT_RETRIES) {
+            await sleep(backoffDelayMs(retryAfterMs, attempt))
+            continue
+          }
+          if (method !== 'GET') {
+            toasts.push(t('errors.rateLimited'), { tone: 'warn' })
+          }
+          throw new ApiError(t('errors.rateLimited'), {
+            status,
+            code: ErrorCode.UNKNOWN,
+            errors: e.data?.errors ?? [],
+            retryAfterMs,
+          })
+        }
+
+        const envErr = e.data?.errors?.[0]
+        const message =
+          envErr?.message ?? (error instanceof Error ? error.message : 'Network error')
+        throw new ApiError(message, {
+          status,
+          code: envErr?.code ?? ErrorCode.UNKNOWN,
+          errors: e.data?.errors ?? [],
+        })
+      }
     }
-    return envelope.result
   }
 
   function $apiSse(path: string, options: SseOptions): SseController {

@@ -431,6 +431,7 @@
     "notMultipart": "Upload must be sent as multipart form data.",
     "noFilesUploaded": "No files were uploaded.",
     "notEnoughPermissions": "You don't have permission to upload.",
-    "uploadFailed": "Upload failed. Please try again."
+    "uploadFailed": "Upload failed. Please try again.",
+    "rateLimited": "Too many requests. Please slow down and try again in a moment."
   }
 }

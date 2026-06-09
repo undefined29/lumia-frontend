@@ -328,18 +328,27 @@ async function onAssignEpisode(payload: { episodeId: string }): Promise<void> {
   }
 }
 
+// Guard against click jitter: ignore a new toggle for an image while its request is in flight.
+const favPending = ref<Set<string>>(new Set())
+
 async function onToggleFavorite(id: string, next: boolean): Promise<void> {
+  if (favPending.value.has(id)) return
   const items = list.items.value
   const target = items.find((img) => img.id === id)
   if (!target) return
   const prev = target.favorite ?? false
   list.items.value = items.map((img) => (img.id === id ? { ...img, favorite: next } : img))
+  favPending.value = new Set(favPending.value).add(id)
   try {
     await api.setFavorite(id, next)
   } catch {
     list.items.value = list.items.value.map((img) =>
       img.id === id ? { ...img, favorite: prev } : img,
     )
+  } finally {
+    const nextPending = new Set(favPending.value)
+    nextPending.delete(id)
+    favPending.value = nextPending
   }
 }
 

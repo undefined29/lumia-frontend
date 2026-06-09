@@ -36,16 +36,28 @@ export class ApiError extends Error {
   readonly code: ErrorCode | number
   readonly status: number
   readonly errors: ErrorItem[]
+  /** Milliseconds to wait before retrying, parsed from the 429 `Retry-After` header. */
+  readonly retryAfterMs?: number
 
   constructor(
     message: string,
-    options: { code?: ErrorCode | number; status?: number; errors?: ErrorItem[] } = {},
+    options: {
+      code?: ErrorCode | number
+      status?: number
+      errors?: ErrorItem[]
+      retryAfterMs?: number
+    } = {},
   ) {
     super(message)
     this.name = 'ApiError'
     this.code = options.code ?? ErrorCode.UNKNOWN
     this.status = options.status ?? 0
     this.errors = options.errors ?? []
+    this.retryAfterMs = options.retryAfterMs
+  }
+
+  get isRateLimited(): boolean {
+    return this.status === 429
   }
 }
 

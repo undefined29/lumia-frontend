@@ -3,6 +3,8 @@ import { computed } from 'vue'
 
 const ICONS: Record<string, string> = {
   search: 'M11 19a8 8 0 1 1 5.3-2L21 21M3 11a8 8 0 0 1 16 0',
+  imageSearch:
+    'M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14z M20.5 20.5l-4.8-4.8 M6.5 13l2.2-2.2 1.6 1.6 2-2.4 1.7 2 M8.2 8.2h.01',
   x: 'M6 6l12 12M18 6L6 18',
   plus: 'M12 5v14M5 12h14',
   upload: 'M12 16V4M6 10l6-6 6 6M4 18v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2',

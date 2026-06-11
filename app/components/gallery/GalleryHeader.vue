@@ -163,6 +163,8 @@ function selectSort(option: SortOption, close: () => void): void {
       <span v-if="!isMobile">{{ t('gallery.density') }}</span>
     </LButton>
 
+    <GalleryImageSearch />
+
     <LButton v-if="canUpload" variant="primary" size="md" icon="upload" @click="pickFiles">
       <span v-if="!isMobile">{{ t('nav.upload') }}</span>
     </LButton>

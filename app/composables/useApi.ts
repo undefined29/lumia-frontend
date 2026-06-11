@@ -234,6 +234,8 @@ export function useApi() {
         query: query as Record<string, unknown>,
       }),
     getImage: (id: string) => $apiFetch<ImageResponseDto>(`/images/${id}`),
+    getImageByHash: (hash: string) =>
+      $apiFetch<ImageResponseDto>(`/images/hash/${encodeURIComponent(hash)}`),
     updateImage: (id: string, body: UpdateImageDto) =>
       $apiFetch<ImageResponseDto>(`/images/${id}`, { method: 'PATCH', body }),
     deleteImage: (id: string) =>

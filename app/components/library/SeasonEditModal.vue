@@ -49,7 +49,13 @@ function onSubmit(): void {
 </script>
 
 <template>
-  <LModal :open="open" :max-width="500" labelled-by="edit-season-title" @close="emit('close')">
+  <LModal
+    :open="open"
+    :max-width="500"
+    labelled-by="edit-season-title"
+    @close="emit('close')"
+    @submit="onSubmit"
+  >
     <header class="es__header">
       <h2 id="edit-season-title" class="es__title">{{ t('library.editSeason') }}</h2>
       <button type="button" class="es__icon" :aria-label="t('common.close')" @click="emit('close')">
@@ -57,7 +63,7 @@ function onSubmit(): void {
       </button>
     </header>
 
-    <form class="es__body" @submit.prevent="onSubmit">
+    <div class="es__body">
       <LField :label="t('library.seasonNumber')">
         <input
           ref="numberInput"
@@ -79,7 +85,7 @@ function onSubmit(): void {
         />
       </LField>
       <p v-if="error" class="es__error" role="alert">{{ error }}</p>
-    </form>
+    </div>
 
     <footer v-if="confirmingDelete" class="es__footer es__footer--confirm">
       <span class="es__confirm-text">{{ t('library.deleteSeasonConfirm') }}</span>

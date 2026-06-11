@@ -40,7 +40,13 @@ function onSubmit(): void {
 </script>
 
 <template>
-  <LModal :open="open" :max-width="440" labelled-by="new-season-title" @close="emit('close')">
+  <LModal
+    :open="open"
+    :max-width="440"
+    labelled-by="new-season-title"
+    @close="emit('close')"
+    @submit="onSubmit"
+  >
     <header class="ns__header">
       <h2 id="new-season-title" class="ns__title">{{ t('library.newSeason') }}</h2>
       <button type="button" class="ns__icon" :aria-label="t('common.close')" @click="emit('close')">
@@ -48,7 +54,7 @@ function onSubmit(): void {
       </button>
     </header>
 
-    <form class="ns__body" @submit.prevent="onSubmit">
+    <div class="ns__body">
       <LField :label="t('library.seasonNumber')">
         <input
           ref="numberInput"
@@ -70,7 +76,7 @@ function onSubmit(): void {
         />
       </LField>
       <p v-if="error" class="ns__error" role="alert">{{ error }}</p>
-    </form>
+    </div>
 
     <footer class="ns__footer">
       <LButton variant="ghost" :disabled="saving" @click="emit('close')">

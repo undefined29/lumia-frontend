@@ -47,6 +47,21 @@ const defaultColor = categoryColorVar('character')
 const usedInCount = computed(() => props.character?.usedInCount ?? 0)
 const usedInLabel = computed(() => formatCount(usedInCount.value, locale.value))
 
+const isCustomColor = computed(() => !!color.value && !COLOR_PRESETS.includes(color.value))
+const pickerValue = computed(() =>
+  color.value && /^#[0-9a-fA-F]{6}$/.test(color.value) ? color.value : '#8b9cff',
+)
+
+function onHexInput(value: string): void {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    color.value = null
+    return
+  }
+  const hex = trimmed.startsWith('#') ? trimmed : `#${trimmed}`
+  if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(hex)) color.value = hex
+}
+
 function onSave(): void {
   const display = displayName.value.trim()
   const tag = tagName.value.trim()
@@ -56,7 +71,13 @@ function onSave(): void {
 </script>
 
 <template>
-  <LModal :open="open" :max-width="560" labelled-by="chareditor-title" @close="emit('close')">
+  <LModal
+    :open="open"
+    :max-width="560"
+    labelled-by="chareditor-title"
+    @close="emit('close')"
+    @submit="onSave"
+  >
     <header class="ce__head">
       <span class="ce__dot" />
       <span id="chareditor-title" class="ce__eyebrow mono">{{ t('charEdit.title') }}</span>
@@ -122,7 +143,33 @@ function onSave(): void {
               :label="preset"
               @select="color = preset"
             />
+            <label
+              class="ce__custom"
+              :class="{ 'ce__custom--active': isCustomColor }"
+              :title="t('tagEdit.customColor')"
+              :aria-label="t('tagEdit.customColor')"
+            >
+              <input
+                type="color"
+                class="ce__custom-native"
+                :value="pickerValue"
+                @input="color = ($event.target as HTMLInputElement).value"
+              />
+              <span
+                class="ce__custom-fill"
+                :style="isCustomColor && color ? { background: color } : undefined"
+              >
+                <LIcon v-if="!isCustomColor" name="plus" :size="14" :stroke="2.5" />
+              </span>
+            </label>
           </div>
+          <input
+            class="ce__hex mono"
+            :value="color ?? ''"
+            :placeholder="t('tagEdit.hexPlaceholder')"
+            :aria-label="t('tagEdit.customColor')"
+            @input="onHexInput(($event.target as HTMLInputElement).value)"
+          />
         </div>
 
         <div class="ce__usage">
@@ -255,6 +302,53 @@ function onSave(): void {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
+}
+.ce__custom {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-s);
+  border: 1.5px dashed var(--color-border-hi);
+  padding: 3px;
+  display: inline-flex;
+  cursor: pointer;
+}
+.ce__custom--active {
+  border-style: solid;
+}
+.ce__custom-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+.ce__custom-fill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  color: var(--color-muted);
+}
+.ce__hex {
+  margin-top: 8px;
+  width: 100%;
+  height: 30px;
+  padding: 0 10px;
+  background: var(--color-surface2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-s);
+  color: var(--color-text);
+  font-size: 12px;
+}
+.ce__hex:focus {
+  outline: none;
+  border-color: var(--color-border-hi);
 }
 .ce__usage {
   display: flex;

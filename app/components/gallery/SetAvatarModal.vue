@@ -71,7 +71,6 @@ function pick(characterId: string): void {
             <span class="sa__opt-name">{{ c.displayName }}</span>
             <span v-if="c.tag" class="sa__opt-tag mono">{{ c.tag }}</span>
             <LSpinner v-if="saving" :size="13" class="sa__opt-spin" />
-            <LIcon v-else name="chev" :size="15" class="sa__opt-chev" />
           </button>
         </li>
       </ul>
@@ -169,7 +168,6 @@ function pick(characterId: string): void {
   color: var(--color-muted);
   flex-shrink: 0;
 }
-.sa__opt-chev,
 .sa__opt-spin {
   color: var(--color-muted);
   flex-shrink: 0;

@@ -45,7 +45,13 @@ function onSubmit(): void {
 </script>
 
 <template>
-  <LModal :open="open" :max-width="460" labelled-by="edit-episode-title" @close="emit('close')">
+  <LModal
+    :open="open"
+    :max-width="460"
+    labelled-by="edit-episode-title"
+    @close="emit('close')"
+    @submit="onSubmit"
+  >
     <header class="ee__header">
       <h2 id="edit-episode-title" class="ee__title">
         {{ t('library.editEpisode') }}
@@ -56,7 +62,7 @@ function onSubmit(): void {
       </button>
     </header>
 
-    <form class="ee__body" @submit.prevent="onSubmit">
+    <div class="ee__body">
       <LField :label="t('library.episodeTitleLabel')">
         <input
           ref="titleInput"
@@ -68,7 +74,7 @@ function onSubmit(): void {
         />
       </LField>
       <p v-if="error" class="ee__error" role="alert">{{ error }}</p>
-    </form>
+    </div>
 
     <footer class="ee__footer">
       <span class="ee__footer-spacer" />

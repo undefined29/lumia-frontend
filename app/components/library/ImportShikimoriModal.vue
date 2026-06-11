@@ -38,7 +38,13 @@ function onSubmit(): void {
 </script>
 
 <template>
-  <LModal :open="open" :max-width="480" labelled-by="import-shiki-title" @close="emit('close')">
+  <LModal
+    :open="open"
+    :max-width="480"
+    labelled-by="import-shiki-title"
+    @close="emit('close')"
+    @submit="onSubmit"
+  >
     <header class="im__header">
       <h2 id="import-shiki-title" class="im__title">{{ title }}</h2>
       <button type="button" class="im__icon" :aria-label="t('common.close')" @click="emit('close')">
@@ -46,7 +52,7 @@ function onSubmit(): void {
       </button>
     </header>
 
-    <form class="im__body" @submit.prevent="onSubmit">
+    <div class="im__body">
       <LField :label="t('library.shikimoriUrl')">
         <input
           ref="input"
@@ -59,7 +65,7 @@ function onSubmit(): void {
         />
       </LField>
       <p v-if="error" class="im__error" role="alert">{{ error }}</p>
-    </form>
+    </div>
 
     <footer class="im__footer">
       <LButton variant="ghost" :disabled="saving" @click="emit('close')">

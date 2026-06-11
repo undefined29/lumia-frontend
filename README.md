@@ -113,6 +113,5 @@ i18n/           Locale messages (en, ru, de) and plural rules
 | `bun run lint:fix`  | Lint and auto-fix            |
 | `bun run format`    | Format with Prettier         |
 
-## Related
 
 - [Lumia backend](https://github.com/Amirust/lumia-backend) — NestJS API, auth, storage, and ML integration.

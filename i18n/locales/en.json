@@ -73,7 +73,21 @@
     "bulkPickEpisode": "TARGET EPISODE",
     "bulkEpisodeRequired": "Choose an episode above to start uploading",
     "bulkDropTitle": "Drop screenshots here",
-    "bulkDropHint": "OR CLICK TO BROWSE · PNG · JPG · WEBP"
+    "bulkDropHint": "OR CLICK TO BROWSE · PNG · JPG · WEBP",
+    "modeLabel": "Upload mode",
+    "modeLink": "Find & link",
+    "modeUpload": "Upload",
+    "bulkLinkDesc": "Add screenshots that are already on the platform. Each file is matched by content and attached to this episode — nothing is re-uploaded.",
+    "bulkLinkDropTitle": "Drop screenshots to find & link",
+    "bulkLinkDropHint": "MATCHED BY CONTENT · ATTACHED TO THIS EPISODE",
+    "linkSummary": "{linked} LINKED · {missing} NOT FOUND",
+    "noneFound": "None of the selected images were found on the platform.",
+    "badgeLinked": "linked",
+    "badgeRelinked": "moved here",
+    "badgeNotFound": "not on platform",
+    "phaseLinked": "LINKED TO EPISODE",
+    "phaseRelinked": "MOVED TO THIS EPISODE",
+    "phaseNotFound": "NOT ON PLATFORM"
   },
   "auth": {
     "welcomeBack": "Welcome back",

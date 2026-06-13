@@ -1,11 +1,32 @@
-import type { ImageStatus, SourceType } from '~/types/image'
+import type { ImageStatus, SourceType, LinkByHashItemDto } from '~/types/image'
 import type { TagView } from '~/types/view'
 import type { SseController } from '~/composables/useApi'
 import { ApiError, ErrorCode } from '~/types/api'
 import { tagViewsFromEventTags } from '~/utils/adapters'
 import { sha256Hex } from '~/utils/hash'
 
-export type UploadPhase = 'queued' | 'uploading' | 'analyzing' | 'done' | 'error' | 'duplicate'
+export type UploadPhase =
+  | 'queued'
+  | 'uploading'
+  | 'analyzing'
+  | 'done'
+  | 'error'
+  | 'duplicate'
+  | 'linked'
+  | 'relinked'
+  | 'missing'
+
+/** Rows whose remove button only clears them locally (no server-side delete). */
+const LOCAL_REMOVE_PHASES: ReadonlySet<UploadPhase> = new Set([
+  'duplicate',
+  'linked',
+  'relinked',
+  'missing',
+])
+
+export function isLocalRemovePhase(phase: UploadPhase): boolean {
+  return LOCAL_REMOVE_PHASES.has(phase)
+}
 
 const PENDING_PHASES: ReadonlySet<UploadPhase> = new Set(['queued', 'uploading', 'analyzing'])
 
@@ -28,6 +49,8 @@ export interface UploadItemView {
 }
 
 const BATCH_SIZE = 10
+/** Backend caps `link-by-hash` at 100 hashes per request. */
+const LINK_BATCH_SIZE = 100
 
 const UPLOAD_ERROR_KEY: Record<number, string> = {
   [ErrorCode.CorruptedImage]: 'errors.corruptedImage',
@@ -38,6 +61,23 @@ const UPLOAD_ERROR_KEY: Record<number, string> = {
 
 function hueFromSeed(seed: string): number {
   return Math.abs(seed.split('').reduce((h, c) => h + c.charCodeAt(0), 0)) % 360
+}
+
+function sortByName(files: File[]): File[] {
+  return [...files].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }),
+  )
+}
+
+function phaseOfLinkStatus(status: LinkByHashItemDto['status']): UploadPhase {
+  switch (status) {
+    case 'linked':
+      return 'linked'
+    case 'relinked':
+      return 'relinked'
+    case 'not_found':
+      return 'missing'
+  }
 }
 
 function phaseOf(status: ImageStatus): UploadPhase {
@@ -82,9 +122,7 @@ export function useUpload() {
     if (options.open ?? true) open.value = true
     error.value = null
     notice.value = null
-    const ordered = [...files].sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }),
-    )
+    const ordered = sortByName(files)
     let added = 0
     for (let i = 0; i < ordered.length; i += BATCH_SIZE) {
       added += await uploadBatch(ordered.slice(i, i + BATCH_SIZE), options)
@@ -153,6 +191,87 @@ export function useUpload() {
       phase: 'duplicate',
       progress: 1,
       tags: null,
+      error: null,
+      previewUrl: URL.createObjectURL(file),
+    }
+  }
+
+  // ---- Find & link mode -------------------------------------------------
+  // No bytes are uploaded: we hash files locally and ask the backend to attach
+  // matching images to the episode. Existing images are already tagged, so there
+  // is no SSE/AI step — results are final the moment the request returns.
+
+  async function startLink(files: File[], episodeId: string): Promise<void> {
+    if (!files.length) return
+    error.value = null
+    notice.value = null
+    const hashed = await Promise.all(
+      sortByName(files).map(async (file) => ({
+        file,
+        hash: await sha256Hex(await file.arrayBuffer()),
+      })),
+    )
+    let linked = 0
+    for (let i = 0; i < hashed.length; i += LINK_BATCH_SIZE) {
+      linked += await linkBatch(hashed.slice(i, i + LINK_BATCH_SIZE), episodeId)
+    }
+    if (!error.value && linked === 0 && !notice.value) {
+      notice.value = t('upload.noneFound')
+    }
+  }
+
+  async function linkBatch(
+    batch: ReadonlyArray<{ file: File; hash: string }>,
+    episodeId: string,
+  ): Promise<number> {
+    try {
+      const { items: results } = await api.linkImagesByHash({
+        episodeId,
+        hashes: batch.map((b) => b.hash),
+      })
+      const resultByHash = new Map(results.map((r) => [r.hash, r] as const))
+
+      const seen = new Set(items.value.map((i) => i.id))
+      const newViews: UploadItemView[] = []
+      let linked = 0
+      for (const { file, hash } of batch) {
+        const result = resultByHash.get(hash)
+        const status = result?.status ?? 'not_found'
+        const view = buildLinkView(file, hash, result)
+        // The same image can match several files (or be re-added): keep one row.
+        if (seen.has(view.id)) {
+          revokePreview(view)
+          continue
+        }
+        seen.add(view.id)
+        if (status !== 'not_found') linked++
+        newViews.push(view)
+      }
+      items.value = [...items.value, ...newViews]
+      return linked
+    } catch (e) {
+      const code = e instanceof ApiError ? e.code : undefined
+      error.value = t((code != null && UPLOAD_ERROR_KEY[code]) || 'errors.uploadFailed')
+      return 0
+    }
+  }
+
+  function buildLinkView(
+    file: File,
+    hash: string,
+    result: LinkByHashItemDto | undefined,
+  ): UploadItemView {
+    const status = result?.status ?? 'not_found'
+    const image = result?.image ?? null
+    const id = image?.id ?? `nf:${hash}`
+    return {
+      id,
+      filename: file.name,
+      size: file.size,
+      hue: hueFromSeed(id),
+      phase: phaseOfLinkStatus(status),
+      progress: 1,
+      tags: image ? toImageView(image).tags : null,
       error: null,
       previewUrl: URL.createObjectURL(file),
     }
@@ -265,6 +384,7 @@ export function useUpload() {
     batchSize: BATCH_SIZE,
     suppressGlobalDrop,
     start,
+    startLink,
     remove,
     deleteUploaded,
     clear,

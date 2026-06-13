@@ -129,6 +129,25 @@ export interface UploadResponseDto {
   items: UploadItemDto[]
 }
 
+/** Outcome for a single hash in a `link-by-hash` request. */
+export type LinkByHashStatus = 'linked' | 'relinked' | 'not_found'
+
+export interface LinkByHashItemDto {
+  hash: string
+  status: LinkByHashStatus
+  /** Present when the hash matched an existing image (linked/relinked); null otherwise. */
+  image: ImageResponseDto | null
+}
+
+export interface LinkByHashResponseDto {
+  items: LinkByHashItemDto[]
+}
+
+export interface LinkByHashDto {
+  hashes: string[]
+  episodeId: string
+}
+
 export type EventTagsByCategory = Record<string, string[]>
 
 export interface ImageStatusEvent {

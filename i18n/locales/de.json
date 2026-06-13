@@ -73,7 +73,21 @@
     "bulkPickEpisode": "ZIEL-EPISODE",
     "bulkEpisodeRequired": "Wähle oben eine Episode, um mit dem Hochladen zu beginnen",
     "bulkDropTitle": "Screenshots hier ablegen",
-    "bulkDropHint": "ODER KLICKEN ZUM AUSWÄHLEN · PNG · JPG · WEBP"
+    "bulkDropHint": "ODER KLICKEN ZUM AUSWÄHLEN · PNG · JPG · WEBP",
+    "modeLabel": "Upload-Modus",
+    "modeLink": "Finden & verknüpfen",
+    "modeUpload": "Hochladen",
+    "bulkLinkDesc": "Füge Screenshots hinzu, die bereits auf der Plattform sind. Jede Datei wird anhand des Inhalts gefunden und mit dieser Episode verknüpft — nichts wird erneut hochgeladen.",
+    "bulkLinkDropTitle": "Screenshots ablegen zum Finden & Verknüpfen",
+    "bulkLinkDropHint": "NACH INHALT GEFUNDEN · MIT EPISODE VERKNÜPFT",
+    "linkSummary": "{linked} VERKNÜPFT · {missing} NICHT GEFUNDEN",
+    "noneFound": "Keines der ausgewählten Bilder wurde auf der Plattform gefunden.",
+    "badgeLinked": "verknüpft",
+    "badgeRelinked": "hierher verschoben",
+    "badgeNotFound": "nicht auf Plattform",
+    "phaseLinked": "MIT EPISODE VERKNÜPFT",
+    "phaseRelinked": "ZU DIESER EPISODE VERSCHOBEN",
+    "phaseNotFound": "NICHT AUF PLATTFORM"
   },
   "auth": {
     "welcomeBack": "Willkommen zurück",

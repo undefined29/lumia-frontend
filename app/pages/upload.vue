@@ -1,25 +1,38 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import type { AnimeView, SeasonView, EpisodeView } from '~/types/view'
-import { useUpload } from '~/composables/useUpload'
+import { useUpload, isLocalRemovePhase } from '~/composables/useUpload'
 import type { UploadPhase } from '~/composables/useUpload'
 import { formatBytes } from '~/utils/format'
 
 const { t } = useI18n()
 const { api } = useApi()
 const { toSeasonView, toEpisodeView } = useAdapters()
-const { canUpload } = usePermissions()
+const { canUpload, canAssignOthersEpisodes } = usePermissions()
 const {
   items,
   error,
   notice,
   pendingCount,
   start,
+  startLink,
   remove,
   deleteUploaded,
   clear,
   suppressGlobalDrop,
 } = useUpload()
+
+type UploadMode = 'upload' | 'link'
+const mode = ref<UploadMode>(canUpload.value ? 'upload' : 'link')
+
+function setMode(next: UploadMode): void {
+  if (mode.value === next) return
+  if (next === 'upload' && !canUpload.value) return
+  if (next === 'link' && !canAssignOthersEpisodes.value) return
+  mode.value = next
+  error.value = null
+  notice.value = null
+}
 
 const deleteTargetId = ref<string | null>(null)
 const deleting = ref(false)
@@ -123,16 +136,23 @@ function pickEpisode(id: string): void {
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const dragging = ref(false)
-const ready = computed(() => !!episodeId.value && canUpload.value)
+const modeAllowed = computed(() =>
+  mode.value === 'upload' ? canUpload.value : canAssignOthersEpisodes.value,
+)
+const ready = computed(() => !!episodeId.value && modeAllowed.value)
 
 function browse(): void {
   if (ready.value) fileInput.value?.click()
 }
 
 async function addFiles(files: File[]): Promise<void> {
-  if (!episodeId.value) return
+  if (!episodeId.value || !modeAllowed.value) return
   const images = files.filter((f) => f.type.startsWith('image/'))
   if (!images.length) return
+  if (mode.value === 'link') {
+    await startLink(images, episodeId.value)
+    return
+  }
   await start(images, { episodeId: episodeId.value, sourceType: 'screenshot', open: false })
 }
 
@@ -155,10 +175,24 @@ function onDragLeave(): void {
 }
 
 const doneCount = computed(() => items.value.filter((i) => i.phase === 'done').length)
+const linkedCount = computed(
+  () => items.value.filter((i) => i.phase === 'linked' || i.phase === 'relinked').length,
+)
+const notFoundCount = computed(() => items.value.filter((i) => i.phase === 'missing').length)
+
+const bulkDesc = computed(() =>
+  t(mode.value === 'link' ? 'upload.bulkLinkDesc' : 'upload.bulkDesc'),
+)
+const dropTitle = computed(() =>
+  t(mode.value === 'link' ? 'upload.bulkLinkDropTitle' : 'upload.bulkDropTitle'),
+)
+const dropHint = computed(() =>
+  t(mode.value === 'link' ? 'upload.bulkLinkDropHint' : 'upload.bulkDropHint'),
+)
 
 function onRemoveItem(item: { id: string; phase: UploadPhase }): void {
-  // Duplicates were never uploaded, so just drop the row locally — no delete confirm.
-  if (item.phase === 'duplicate') remove(item.id)
+  // Duplicates and find-&-link rows were never owned uploads — drop locally, no delete confirm.
+  if (isLocalRemovePhase(item.phase)) remove(item.id)
   else askDelete(item.id)
 }
 
@@ -169,6 +203,9 @@ const BADGE: Record<UploadPhase, { key: string; color: string }> = {
   done: { key: 'upload.badgeDone', color: 'var(--color-ok)' },
   error: { key: 'upload.badgeError', color: 'var(--color-err)' },
   duplicate: { key: 'upload.badgeDuplicate', color: 'var(--color-warn)' },
+  linked: { key: 'upload.badgeLinked', color: 'var(--color-ok)' },
+  relinked: { key: 'upload.badgeRelinked', color: 'var(--color-accent-text)' },
+  missing: { key: 'upload.badgeNotFound', color: 'var(--color-warn)' },
 }
 
 const SCROLL_TOP_THRESHOLD = 500
@@ -191,12 +228,41 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onWindowScroll))
   <main class="bulk">
     <header class="bulk__head">
       <h1 class="bulk__title">{{ t('upload.bulkTitle') }}</h1>
-      <p class="bulk__desc">{{ t('upload.bulkDesc') }}</p>
+      <p class="bulk__desc">{{ bulkDesc }}</p>
     </header>
 
-    <div v-if="!canUpload" class="bulk__guard">{{ t('errors.notEnoughPermissions') }}</div>
+    <div v-if="!canUpload && !canAssignOthersEpisodes" class="bulk__guard">
+      {{ t('errors.notEnoughPermissions') }}
+    </div>
 
     <template v-else>
+      <div class="bulk__modes" role="tablist" :aria-label="t('upload.modeLabel')">
+        <button
+          type="button"
+          class="bulk__mode"
+          :class="{ 'bulk__mode--active': mode === 'link' }"
+          :disabled="!canAssignOthersEpisodes"
+          role="tab"
+          :aria-selected="mode === 'link'"
+          @click="setMode('link')"
+        >
+          <LIcon name="search" :size="14" />
+          {{ t('upload.modeLink') }}
+        </button>
+        <button
+          type="button"
+          class="bulk__mode"
+          :class="{ 'bulk__mode--active': mode === 'upload' }"
+          :disabled="!canUpload"
+          role="tab"
+          :aria-selected="mode === 'upload'"
+          @click="setMode('upload')"
+        >
+          <LIcon name="upload" :size="14" />
+          {{ t('upload.modeUpload') }}
+        </button>
+      </div>
+
       <section class="bulk__panel">
         <div class="bulk__eyebrow mono">{{ t('upload.bulkPickEpisode') }}</div>
         <div class="bulk__cascade">
@@ -333,9 +399,9 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onWindowScroll))
         <input ref="fileInput" type="file" accept="image/*" multiple hidden @change="onPick" />
         <LIcon name="upload" :size="30" class="dz__icon" />
         <p class="dz__title">
-          {{ episodeId ? t('upload.bulkDropTitle') : t('upload.bulkEpisodeRequired') }}
+          {{ episodeId ? dropTitle : t('upload.bulkEpisodeRequired') }}
         </p>
-        <p v-if="episodeId" class="dz__hint mono">{{ t('upload.bulkDropHint') }}</p>
+        <p v-if="episodeId" class="dz__hint mono">{{ dropHint }}</p>
       </section>
 
       <div v-if="error" class="bulk__alert bulk__alert--err" role="alert">
@@ -351,11 +417,17 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onWindowScroll))
         <div class="bulk__progress-head">
           <span class="bulk__progress-summary mono">
             {{
-              t('upload.summary', {
-                done: doneCount,
-                remaining: pendingCount,
-                max: items.length,
-              })
+              mode === 'link'
+                ? t('upload.linkSummary', {
+                    linked: linkedCount,
+                    missing: notFoundCount,
+                    max: items.length,
+                  })
+                : t('upload.summary', {
+                    done: doneCount,
+                    remaining: pendingCount,
+                    max: items.length,
+                  })
             }}
           </span>
           <LButton variant="ghost" size="sm" @click="clear">{{ t('common.clearAll') }}</LButton>
@@ -380,6 +452,12 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onWindowScroll))
                 class="row__overlay row__overlay--duplicate"
               >
                 <LIcon name="picture" :size="16" :stroke="2" />
+              </div>
+              <div
+                v-else-if="item.phase === 'missing'"
+                class="row__overlay row__overlay--duplicate"
+              >
+                <LIcon name="search" :size="16" :stroke="2" />
               </div>
             </div>
             <div class="row__body">
@@ -468,6 +546,40 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onWindowScroll))
   border: 1px dashed var(--color-border);
   border-radius: var(--radius-m);
 }
+.bulk__modes {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-bg2);
+}
+.bulk__mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: var(--radius-s);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-muted);
+  transition:
+    background var(--dur-fast),
+    color var(--dur-fast);
+}
+.bulk__mode:hover:not(:disabled):not(.bulk__mode--active) {
+  color: var(--color-text);
+  background: var(--color-surface2);
+}
+.bulk__mode--active {
+  color: var(--color-text);
+  background: var(--color-surface3);
+}
+.bulk__mode:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .bulk__panel {
   padding: 18px;
   border: 1px solid var(--color-border);

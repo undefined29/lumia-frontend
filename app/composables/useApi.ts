@@ -32,6 +32,8 @@ import type {
   UpdateImageDto,
   DeleteImageResponseDto,
   UploadResponseDto,
+  LinkByHashDto,
+  LinkByHashResponseDto,
   ImageStatusEvent,
   SourceType,
 } from '~/types'
@@ -261,6 +263,10 @@ export function useApi() {
       if (options.sourceType) form.append('sourceType', options.sourceType)
       return $apiFetch<UploadResponseDto>('/images/upload', { method: 'POST', body: form })
     },
+    // Find existing images by content hash and attach them to an episode without re-uploading
+    // bytes. Backend caps each request at LINK_HASH_BATCH_SIZE hashes (callers must batch).
+    linkImagesByHash: (body: LinkByHashDto) =>
+      $apiFetch<LinkByHashResponseDto>('/images/link-by-hash', { method: 'POST', body }),
 
     listCharacters: (query: CharacterListQuery = {}) =>
       $apiFetch<CharacterResponseDto[]>('/characters', { query }),

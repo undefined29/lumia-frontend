@@ -44,6 +44,9 @@ const BADGE: Record<UploadPhase, BadgeMeta> = {
   done: { key: 'upload.badgeDone', color: 'var(--color-ok)' },
   error: { key: 'upload.badgeError', color: 'var(--color-err)' },
   duplicate: { key: 'upload.badgeDuplicate', color: 'var(--color-warn)' },
+  linked: { key: 'upload.badgeLinked', color: 'var(--color-ok)' },
+  relinked: { key: 'upload.badgeRelinked', color: 'var(--color-accent-text)' },
+  missing: { key: 'upload.badgeNotFound', color: 'var(--color-warn)' },
 }
 
 const STATUS_LABEL: Record<UploadPhase, string> = {
@@ -53,6 +56,9 @@ const STATUS_LABEL: Record<UploadPhase, string> = {
   done: 'upload.phaseDone',
   error: 'upload.phaseError',
   duplicate: 'upload.phaseDuplicate',
+  linked: 'upload.phaseLinked',
+  relinked: 'upload.phaseRelinked',
+  missing: 'upload.phaseNotFound',
 }
 
 function ringDash(progress: number): string {
@@ -190,6 +196,9 @@ async function confirmDelete(): Promise<void> {
           </div>
           <div v-else-if="item.phase === 'duplicate'" class="um__overlay um__overlay--duplicate">
             <LIcon name="picture" :size="18" :stroke="2" />
+          </div>
+          <div v-else-if="item.phase === 'missing'" class="um__overlay um__overlay--duplicate">
+            <LIcon name="search" :size="18" :stroke="2" />
           </div>
         </div>
 
